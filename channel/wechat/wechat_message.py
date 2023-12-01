@@ -69,7 +69,9 @@ class WechatMessage(ChatMessage):
             self.to_user_nickname = nickname
         try:  # 陌生人时候, User字段可能不存在
             # my_msg 为True是表示是自己发送的消息
-            self.my_msg = itchat_msg["ToUserName"] == itchat_msg["User"]["UserName"] and \
+            # 增加文件助手
+            self.my_msg = itchat_msg["ToUserName"] != "filehelper"and \
+                          itchat_msg["ToUserName"] == itchat_msg["User"]["UserName"] and \
                           itchat_msg["ToUserName"] != itchat_msg["FromUserName"]
             self.other_user_id = itchat_msg["User"]["UserName"]
             self.other_user_nickname = itchat_msg["User"]["NickName"]

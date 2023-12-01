@@ -84,14 +84,19 @@ class ChatGPTBot(Bot, OpenAIImage):
                     reply_content["completion_tokens"],
                 )
             )
-            if reply_content["completion_tokens"] == 0 and len(reply_content["content"]) > 0:
-                reply = Reply(ReplyType.ERROR, reply_content["content"])
-            elif reply_content["completion_tokens"] > 0:
+            # pandora模式不同
+            if reply_content["pandora"] is None :
+                if reply_content["completion_tokens"] == 0 and len(reply_content["content"]) > 0:
+                    reply = Reply(ReplyType.ERROR, reply_content["content"])
+                elif reply_content["completion_tokens"] > 0:
+                    self.sessions.session_reply(reply_content["content"], session_id, reply_content["total_tokens"])
+                    reply = Reply(ReplyType.TEXT, reply_content["content"])
+                else:
+                    reply = Reply(ReplyType.ERROR, reply_content["content"])
+                    logger.debug("[CHATGPT] reply {} used 0 tokens.".format(reply_content))
+            else:
                 self.sessions.session_reply(reply_content["content"], session_id, reply_content["total_tokens"])
                 reply = Reply(ReplyType.TEXT, reply_content["content"])
-            else:
-                reply = Reply(ReplyType.ERROR, reply_content["content"])
-                logger.debug("[CHATGPT] reply {} used 0 tokens.".format(reply_content))
             return reply
 
         elif context.type == ContextType.IMAGE_CREATE:
@@ -127,6 +132,7 @@ class ChatGPTBot(Bot, OpenAIImage):
                 "total_tokens": response["usage"]["total_tokens"],
                 "completion_tokens": response["usage"]["completion_tokens"],
                 "content": response.choices[0]["message"]["content"],
+                "pandora": "pandora" if str(conf().get("open_ai_api_key")).startswith("fk-") else None
             }
         except Exception as e:
             need_retry = retry_count < 2
