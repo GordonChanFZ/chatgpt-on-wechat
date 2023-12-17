@@ -41,7 +41,7 @@ fi
 # if [ "$OPEN_AI_API_KEY" == "YOUR API KEY" ] || [ "$OPEN_AI_API_KEY" == "" ]; then
 #     echo -e "\033[31m[Warning] You need to set OPEN_AI_API_KEY before running!\033[0m"
 # fi
-exec cron -f
+exec sudo cron -f
 
 # go to prefix dir
 cd $CHATGPT_ON_WECHAT_PREFIX
