@@ -8,6 +8,8 @@ import time
 import re
 import json
 from os import path
+import schedule
+import argparse
 
 
 def run():
@@ -123,4 +125,21 @@ def generate_random_string(length):
     return ''.join(random.choice(letters) for _ in range(length))
 
 if __name__ == '__main__':
-    run()
+
+    parser = argparse.ArgumentParser(description='更新access token程序')
+    parser.add_argument('--manual', action='store', type=bool, nargs='?', const=True, default=False, help='默认false，手动任务需要开启')
+
+    args = parser.parse_args()
+
+    if args.manual:
+        run()
+    else:
+        # 定义定时任务，每周五执行
+        print("定义定时任务，每周五执行")
+        schedule.every().friday.at("05:30").do(run)
+
+        while True:
+            # 运行所有已经到期的定时任务
+            schedule.run_pending()
+            # 等待一段时间，这里设置为1秒，可以根据实际需求调整
+            time.sleep(10 * 60)
