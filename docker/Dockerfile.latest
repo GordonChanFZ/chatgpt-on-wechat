@@ -13,6 +13,8 @@ ADD . ${BUILD_PREFIX}
 
 RUN apt-get update \
     &&apt-get install -y --no-install-recommends bash ffmpeg espeak libavcodec-extra cron\
+    && touch /var/run/crond.pid \
+    && chmod 644 /var/run/crond.pid \
     && cd ${BUILD_PREFIX} \
     && cp config-template.json config.json \
     && /usr/local/bin/python -m pip install --no-cache --upgrade pip \
