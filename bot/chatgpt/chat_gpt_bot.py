@@ -128,11 +128,12 @@ class ChatGPTBot(Bot, OpenAIImage):
             response = openai.ChatCompletion.create(api_key=api_key, messages=session.messages, **args)
             # logger.debug("[CHATGPT] response={}".format(response))
             # logger.info("[ChatGPT] reply={}, total_tokens={}".format(response.choices[0]['message']['content'], response["usage"]["total_tokens"]))
+            api_key = str(conf().get("open_ai_api_key"))
             return {
                 "total_tokens": response["usage"]["total_tokens"],
                 "completion_tokens": response["usage"]["completion_tokens"],
                 "content": response.choices[0]["message"]["content"],
-                "pandora": "pandora" if str(conf().get("open_ai_api_key")).startswith("fk-") else None
+                "pandora": "pandora" if api_key.startswith("fk-") or api_key.startswith("pk-") else None
             }
         except Exception as e:
             need_retry = retry_count < 2
