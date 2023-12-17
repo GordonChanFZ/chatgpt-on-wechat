@@ -84,8 +84,9 @@ class ChatGPTBot(Bot, OpenAIImage):
                     reply_content["completion_tokens"],
                 )
             )
-            # pandora模式不同
-            if reply_content["pandora"] is None :
+            #pandora reply_content["completion_tokens"] == 0 故返回ReplyType.ERROR
+            if reply_content["pandora"] is None:
+                #之前的模型返回处理
                 if reply_content["completion_tokens"] == 0 and len(reply_content["content"]) > 0:
                     reply = Reply(ReplyType.ERROR, reply_content["content"])
                 elif reply_content["completion_tokens"] > 0:
@@ -94,7 +95,7 @@ class ChatGPTBot(Bot, OpenAIImage):
                 else:
                     reply = Reply(ReplyType.ERROR, reply_content["content"])
                     logger.debug("[CHATGPT] reply {} used 0 tokens.".format(reply_content))
-            else:
+            else:#Pandora返回处理
                 self.sessions.session_reply(reply_content["content"], session_id, reply_content["total_tokens"])
                 reply = Reply(ReplyType.TEXT, reply_content["content"])
             return reply
@@ -128,12 +129,13 @@ class ChatGPTBot(Bot, OpenAIImage):
             response = openai.ChatCompletion.create(api_key=api_key, messages=session.messages, **args)
             # logger.debug("[CHATGPT] response={}".format(response))
             # logger.info("[ChatGPT] reply={}, total_tokens={}".format(response.choices[0]['message']['content'], response["usage"]["total_tokens"]))
-            api_key = str(conf().get("open_ai_api_key"))
+            #增加一个key pandora 用于处理pandora模型返回的completion_tokens=0 出现的error
+            logger.debug("通过key前缀区分pandora模型："+str(conf().get('open_ai_api_key')))
             return {
                 "total_tokens": response["usage"]["total_tokens"],
                 "completion_tokens": response["usage"]["completion_tokens"],
                 "content": response.choices[0]["message"]["content"],
-                "pandora": "pandora" if api_key.startswith("fk-") or api_key.startswith("pk-") else None
+                "pandora": "pandora" if str(conf().get('open_ai_api_key')).startswith("fk-") or str(conf().get('open_ai_api_key')).startswith("pk-") else None
             }
         except Exception as e:
             need_retry = retry_count < 2
@@ -155,8 +157,9 @@ class ChatGPTBot(Bot, OpenAIImage):
                     time.sleep(10)
             elif isinstance(e, openai.error.APIConnectionError):
                 logger.warn("[CHATGPT] APIConnectionError: {}".format(e))
-                need_retry = False
                 result["content"] = "我连接不到你的网络"
+                if need_retry:
+                    time.sleep(5)
             else:
                 logger.exception("[CHATGPT] Exception: {}".format(e))
                 need_retry = False
